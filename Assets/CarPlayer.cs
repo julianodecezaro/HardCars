@@ -3,50 +3,77 @@ using System.Collections;
 
 public class CarPlayer : MonoBehaviour {
 
-	public 	GameObject 			Player;
-	public 	Rigidbody2D 		PlayerRigidbody;
-	public 	int					JumpForce;
-	public 	float				CarRotation;
-	public	Camera				MainCamera;
+    public float m_Speed = 12f;
+    public float m_TurnSpeed;
+    public Camera MainCamera;
+    private Rigidbody m_Rigidbody;
+    private float m_MovementInputValue;
+    private float m_TurnInputValue;
+    public SpriteRenderer carRenderer;
+    private float carSize;
 
-	// Use this for initialization
-	void Start () {
-		CarRotation = 1.0f;
-	}
-	
-	// Update is called once per frame
-	void FixedUpdate () {
-		/*if (Input.GetButton ("Horizontal")) {
-			if (Input.GetAxis ("Horizontal") < 0) {
-				CarRotation += (Player.transform.localRotation.z + 1);
-			} else {
-				CarRotation -= (Player.transform.localRotation.z + 1);			
-			}
-			Player.transform.localRotation = Quaternion.Euler(0, 0, CarRotation);
-		}*/
+    void Start()
+    {
+        m_Rigidbody = GetComponent<Rigidbody>();
+        //carSize = carRenderer.bounds.size.x;
+    }
 
-		//if (Input.GetButton ("Vertical")) {
-			//if (Input.GetAxis ("Vertical") < 0) {
-				//Debug.Log (CarRotation.ToString());
-			//PlayerRigidbody.AddTorque(CarRotation * 4.0f * -0.2f);
-			//PlayerRigidbody.AddForce(transform.right * (Input.GetAxis ("Vertical") * -1.0f) * JumpForce * 50.0f);
-			PlayerRigidbody.AddForce(transform.right * Input.GetAxis ("Horizontal") * JumpForce * 50.0f);
+    void FixedUpdate()
+    {
+        m_MovementInputValue = Input.GetAxis("Vertical");
+        m_TurnInputValue = Input.GetAxis("Horizontal");
+        Move();
+        Turn();
+        MainCamera.transform.position = new Vector3(transform.position.x, transform.position.y, -1);
+    }
+
+    private void Nitro()
+    {
+        if (Input.GetButton("Nitro"))
+        {
+            m_Speed = 24f;
+        }
+        else {
+            m_Speed = 12f;
+        }
+    }
+
+    private void Move()
+    {
+        //Nitro();
+        Vector3 movement = transform.up * m_MovementInputValue * m_Speed * Time.deltaTime;        
+        m_Rigidbody.MovePosition(m_Rigidbody.position + movement);        
+    }
 
 
+    private void Turn()
+    {
+        if (m_MovementInputValue != 0)
+        {
+            float turn = (m_TurnInputValue * -1) * m_TurnSpeed * Time.deltaTime;
+            Quaternion turnRotation = Quaternion.Euler(0f, 0f, turn);
+            m_Rigidbody.MoveRotation(m_Rigidbody.rotation * turnRotation);
+        }
+    }
 
-			//rigidbody2D.AddForce(transform.right * _inputs.y * acceleration * 50.0f);
+    private void OnCollisionEnter(Collision collision) 
+    {
+        Debug.Log(collision.gameObject.layer);
+        if (collision.gameObject.layer == 8){
+            m_Speed = 6f;
+        }
+        if (collision.gameObject.layer == 9){
+            m_Speed = 0f;
+        }
+    }
 
-
-
-
-
-
-			//} else {
-				//PlayerRigidbody.AddForce (new Vector3((JumpForce * -1) * transform.right.x * transform.forward.x, 0 * transform.forward.y, CarRotation * transform.forward.z));
-			//}
-		//}
-
-		MainCamera.transform.position = new Vector3(Player.transform.position.x, Player.transform.position.y, -10);
-
-	}
+    private void OnCollisionExit(Collision collision) 
+    {
+        Debug.Log(collision.gameObject.layer);
+        //switch (collision.gameObject.layer){
+            //default:
+                m_Speed = 12f;
+                //break;
+        //}
+    }
 }
